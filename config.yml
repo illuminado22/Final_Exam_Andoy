@@ -1,0 +1,5 @@
+ansible_managed_user: "Francis Nikko Andoy"
+
+enterprise_service_name: "nginx"
+enterprise_port: 80
+web_message: "Ansible Managed Nginx Enterprise Service"
