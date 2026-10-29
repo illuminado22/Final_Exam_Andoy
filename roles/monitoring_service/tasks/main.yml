@@ -1,7 +1,4 @@
 ---
-# tasks file for roles/monitoring_service
-
-# 1. Install prerequisites (tar and curl) across both OS families
 - name: Install tar and curl
   ansible.builtin.package:
     name:
@@ -9,7 +6,6 @@
       - curl
     state: present
 
-# 2. Create dedicated system user for node_exporter
 - name: Create prometheus node_exporter system user
   ansible.builtin.user:
     name: node_exporter
@@ -17,7 +13,6 @@
     shell: /bin/false
     create_home: false
 
-# 3. Download and unarchive Node Exporter release binary
 - name: Download and unpack Node Exporter binary
   ansible.builtin.unarchive:
     src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
@@ -25,7 +20,6 @@
     remote_src: yes
     creates: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
 
-# 4. Copy binary to /usr/local/bin
 - name: Place node_exporter binary in PATH
   ansible.builtin.copy:
     src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
@@ -35,7 +29,6 @@
     mode: '0755'
     remote_src: yes
 
-# 5. Create systemd unit service file
 - name: Create systemd unit for node_exporter
   ansible.builtin.copy:
     dest: /etc/systemd/system/node_exporter.service
@@ -58,7 +51,6 @@
     mode: '0644'
   notify: restart_node_exporter
 
-# 6. Open monitoring port on CentOS firewalld (only runs on CentOS/RHEL)
 - name: Allow monitoring port on CentOS firewalld
   ansible.posix.firewalld:
     port: "{{ monitoring_port }}/tcp"
@@ -68,7 +60,6 @@
   when: ansible_os_family == "RedHat"
   ignore_errors: true
 
-# 7. Start and enable node_exporter service
 - name: Ensure node_exporter is enabled and started
   ansible.builtin.systemd:
     name: node_exporter

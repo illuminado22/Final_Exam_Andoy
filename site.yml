@@ -1,0 +1,23 @@
+---
+- name: Final Exam - Enterprise Service and Monitoring Deployment
+  hosts: all
+  become: true
+  vars_files:
+    - config.yml
+
+  tasks:
+
+    - name: Set Message of the Day
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: "Ansible Managed by {{ ansible_managed_user }}\n"
+        mode: '0644'
+
+  roles:
+
+    - role: enterprise_service
+      tags: enterprise
+
+   
+    - role: monitoring_service
+      tags: monitoring
