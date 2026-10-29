@@ -1,0 +1,71 @@
+---
+- name: Stop and disable Apache on Ubuntu
+  ansible.builtin.service:
+    name: apache2
+    state: stopped
+    enabled: false
+  when: ansible_os_family == "Debian"
+  ignore_errors: true
+
+- name: Stop and disable httpd on CentOS
+  ansible.builtin.service:
+    name: httpd
+    state: stopped
+    enabled: false
+  when: ansible_os_family == "RedHat"
+  ignore_errors: true
+
+- name: Kill lingering web processes
+  ansible.builtin.shell: "fuser -k 80/tcp || true"
+  changed_when: false
+
+- name: Install Nginx package
+  ansible.builtin.package:
+    name: "{{ enterprise_service_name }}"
+    state: present
+
+- name: Remove Ubuntu default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: ansible_os_family == "Debian"
+  ignore_errors: true
+
+- name: Ensure /etc/nginx/conf.d directory exists
+  ansible.builtin.file:
+    path: /etc/nginx/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure custom Nginx server block
+  ansible.builtin.copy:
+    dest: /etc/nginx/conf.d/enterprise_service.conf
+    content: |
+      server {
+          listen {{ enterprise_port }} default_server;
+          server_name _;
+
+          location / {
+              return 200 "Nginx Enterprise Service Active on port {{ enterprise_port }}\n";
+          }
+      }
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Allow enterprise port in firewalld (CentOS)
+  ansible.posix.firewalld:
+    port: "{{ enterprise_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  when: ansible_os_family == "RedHat"
+  ignore_errors: true
+
+- name: Ensure Nginx service is enabled and running
+  ansible.builtin.service:
+    name: "{{ enterprise_service_name }}"
+    state: started
+    enabled: true
