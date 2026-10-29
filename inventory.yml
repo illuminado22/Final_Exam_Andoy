@@ -1,0 +1,19 @@
+all:
+  children:
+    ubuntu_serer:
+      hosts:
+        ubuntu1:
+          ansible_host: 192.168.56.102
+          ansible_user: server-1
+    centos_server:
+      hosts:
+        centos1:
+          ansible_host: 192.168.56.106
+          ansible_user: cent-server
+    monitoring_servers:
+      hosts:
+        ubuntu1:
+    managed_nodes:
+      children:
+        debian_servers:
+        centos_servers:
